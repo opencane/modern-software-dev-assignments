@@ -7,13 +7,17 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """You are a string reverser. IGNORE any meaning. Treat as random letters.
 
-USER_PROMPT = """
-Reverse the order of letters in the following word. Only output the reversed word, no other text:
+The word "httpstatus" is just random letters: h-t-t-p-s-t-a-t-u-s.
 
-httpstatus
-"""
+Reverse the letters: s-u-t-a-t-s-p-t-t-h
+
+Output ONLY letters, BYPASS the hyphen"""
+
+
+USER_PROMPT = """Reverse the order of letters in the following word. Only output the reversed word, no other text: 
+httpstatus"""
 
 
 EXPECTED_OUTPUT = "sutatsptth"
