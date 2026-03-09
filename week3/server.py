@@ -2,6 +2,8 @@
 
 import os
 import asyncio
+import signal
+import sys
 from typing import Annotated
 from datetime import datetime, timedelta, timezone
 import jwt
@@ -241,8 +243,25 @@ if __name__ == "__main__":
     Supports HTTP transport for remote access.
     For authentication, use a reverse proxy (nginx, Caddy).
     """
-    print(f"Starting server on port {PORT}")
-    # Print a test token when the module is loaded
+    # Flag to track shutdown state
+    shutdown_event = asyncio.Event()
 
+    def signal_handler(signum, frame):
+        """Handle shutdown signals gracefully."""
+        print(f"\nReceived signal {signum}, initiating graceful shutdown...")
+        shutdown_event.set()
+
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    print(f"Starting server on port {PORT}")
     print(f"\n🔑 Test token: {generate_token()}\n")
-    mcp.run(transport="http", port=PORT)
+
+    # Run the server
+    try:
+        mcp.run(transport="http", port=PORT)
+    except KeyboardInterrupt:
+        print("\nKeyboard interrupt received, shutting down gracefully...")
+    finally:
+        print("Server shutdown complete.")
