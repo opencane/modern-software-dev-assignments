@@ -40,7 +40,7 @@ git mv old_path new_path
 ### 4. Update all imports
 
 For each file that imports the old module:
-- `from ... import X` → `from ... import X` (module name changed)
+- `from ... import old_name` → `from ... import new_name` (module name changed)
 - Update any relative import paths if the directory changed
 
 ### 5. Run linter/ formatter
