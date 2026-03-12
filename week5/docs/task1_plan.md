@@ -56,7 +56,7 @@ web-build:
 	cd frontend && npm run build
 
 run: web-build
-	PYTHONPATH=. uvicorn backend.app.main:app --reload --host $${HOST:-127.0.0.1} --port $${PORT:-8000}
+	PYTHONPATH=. poetry run uvicorn backend.app.main:app --reload --host $${HOST:-127.0.0.1} --port $${PORT:-8000}
 ```
 
 ### Phase 6: Add Tests

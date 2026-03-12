@@ -1,6 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,12 @@ from ..models import Note
 from ..schemas import NoteCreate, NoteRead
 
 router = APIRouter(prefix="/notes", tags=["notes"])
+
+
+# Redirect /notes to /notes/ for consistency
+@router.get("")
+def list_notes_redirect():
+    return RedirectResponse(url="/notes/")
 
 
 @router.get("/", response_model=list[NoteRead])
@@ -24,6 +31,11 @@ def create_note(payload: NoteCreate, db: Session = Depends(get_db)) -> NoteRead:
     db.flush()
     db.refresh(note)
     return NoteRead.model_validate(note)
+
+
+@router.get("/search", response_model=list[NoteRead])
+def search_notes_redirect():
+    return RedirectResponse(url="/notes/search/")
 
 
 @router.get("/search/", response_model=list[NoteRead])

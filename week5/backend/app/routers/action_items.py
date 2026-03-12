@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,12 @@ from ..models import ActionItem
 from ..schemas import ActionItemCreate, ActionItemRead
 
 router = APIRouter(prefix="/action-items", tags=["action_items"])
+
+
+# Redirect /action-items to /action-items/ for consistency
+@router.get("")
+def list_items_redirect():
+    return RedirectResponse(url="/action-items/")
 
 
 @router.get("/", response_model=list[ActionItemRead])
