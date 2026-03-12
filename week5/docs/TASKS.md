@@ -1,6 +1,6 @@
 # Tasks for Repo 
 
-## 1) Migrate frontend to Vite + React (complex)
+## 1) Migrate frontend to Vite + React (complex)[done]
 - Scaffold a Vite + React app in `week5/frontend/` (or a subfolder like `week5/frontend/ui/`).
 - Replace the current static assets with a built bundle served by FastAPI:
   - Build to `week5/frontend/dist/`.

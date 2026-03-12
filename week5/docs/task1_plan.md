@@ -59,13 +59,14 @@ run: web-build
 	PYTHONPATH=. poetry run uvicorn backend.app.main:app --reload --host $${HOST:-127.0.0.1} --port $${PORT:-8000}
 ```
 
-### Phase 6: Add Tests
+### Phase 6: Add Tests - COMPLETED
 1. **Frontend tests** (in `frontend/src/__tests__/`):
-   - `NotesList.test.jsx` - Test note list rendering and creation
-   - `ActionItemsList.test.jsx` - Test action items rendering and completion
-   - Use React Testing Library + Vitest (comes with Vite)
+   - `NotesList.test.jsx` - 6 tests for note list rendering and CRUD operations
+   - `ActionItemsList.test.jsx` - 8 tests for action items rendering and CRUD operations
+   - Uses React Testing Library + Vitest
 2. **Backend integration tests** (in `backend/tests/`):
-   - Add tests for API compatibility (existing tests cover this)
+   - Added tests for trailing slash redirects (`/notes` → `/notes/`, etc.)
+   - Existing tests cover API compatibility
 
 ## Critical Files to Modify
 - `backend/app/main.py` - Update static file serving
@@ -76,6 +77,5 @@ run: web-build
 1. Run `make web-install` to install dependencies
 2. Run `make web-build` to build React app
 3. Run `make run` to start server and verify frontend loads
-4. Test notes CRUD operations in browser
-5. Run `npm test` in frontend directory for component tests
-6. Run `make test` for backend API tests
+4. Run `npm test` in frontend directory for component tests
+5. Run `make test` for backend API tests
