@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getNotes, createNote, deleteNote, searchNotes } from '../api';
+import { getNotes, createNote, deleteNote, searchNotes, updateNote } from '../api';
 
 function NotesList() {
   const [notes, setNotes] = useState([]);
@@ -16,6 +16,11 @@ function NotesList() {
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState('created_desc');
   const [totalNotes, setTotalNotes] = useState(0);
+
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   const fetchNotes = async () => {
     try {
@@ -56,11 +61,54 @@ function NotesList() {
   };
 
   const handleDelete = async (id) => {
+    // Optimistic delete: store current notes for rollback
+    const previousNotes = [...notes];
+
+    // Immediately remove note from state
+    setNotes(notes.filter(note => note.id !== id));
+    setTotalNotes(totalNotes - 1);
+    setError(null);
+
     try {
-      setError(null);
       await deleteNote(id);
-      fetchNotes();
     } catch (err) {
+      // Rollback on error
+      setNotes(previousNotes);
+      setTotalNotes(previousNotes.length);
+      setError(err.message);
+    }
+  };
+
+  const handleEditStart = (note) => {
+    setEditingId(note.id);
+    setEditTitle(note.title);
+    setEditContent(note.content);
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditContent('');
+  };
+
+  const handleEditSave = async (id) => {
+    if (!editTitle.trim() || !editContent.trim()) return;
+
+    // Optimistic update: store previous state for rollback
+    const previousNotes = [...notes];
+
+    // Immediately update note in state
+    setNotes(notes.map(note =>
+      note.id === id ? { ...note, title: editTitle, content: editContent } : note
+    ));
+    setError(null);
+    setEditingId(null);
+
+    try {
+      await updateNote(id, { title: editTitle, content: editContent });
+    } catch (err) {
+      // Rollback on error
+      setNotes(previousNotes);
       setError(err.message);
     }
   };
@@ -145,13 +193,40 @@ function NotesList() {
         <ul>
           {notes.map((note) => (
             <li key={note.id}>
-              {note.title}: {note.content}
-              <button
-                onClick={() => handleDelete(note.id)}
-                style={{ marginLeft: '0.5rem' }}
-              >
-                Delete
-              </button>
+              {editingId === note.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    placeholder="Title"
+                  />
+                  <input
+                    type="text"
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    placeholder="Content"
+                  />
+                  <button onClick={() => handleEditSave(note.id)}>Save</button>
+                  <button onClick={handleEditCancel} style={{ marginLeft: '0.5rem' }}>Cancel</button>
+                </>
+              ) : (
+                <>
+                  {note.title}: {note.content}
+                  <button
+                    onClick={() => handleEditStart(note)}
+                    style={{ marginLeft: '0.5rem' }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(note.id)}
+                    style={{ marginLeft: '0.5rem' }}
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ul>

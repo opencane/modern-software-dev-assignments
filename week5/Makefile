@@ -15,7 +15,7 @@ web-test:
 run: web-build
 	PYTHONPATH=. poetry run uvicorn backend.app.main:app --reload --host $${HOST:-127.0.0.1} --port $${PORT:-8000}
 
-test:
+test: web-build
 	PYTHONPATH=. poetry run pytest -q backend/tests
 
 format:

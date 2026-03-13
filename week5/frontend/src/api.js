@@ -41,8 +41,21 @@ export async function createNote(note) {
 }
 
 export async function deleteNote(id) {
-  return fetchJSON(`/notes/${id}`, {
+  const res = await fetch(`/notes/${id}`, {
     method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || `HTTP error ${res.status}`);
+  }
+  // DELETE returns 204 No Content, so we don't try to parse JSON
+  return undefined;
+}
+
+export async function updateNote(id, note) {
+  return fetchJSON(`/notes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(note),
   });
 }
 

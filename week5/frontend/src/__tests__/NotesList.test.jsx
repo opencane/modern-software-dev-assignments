@@ -7,10 +7,11 @@ vi.mock('../api', () => ({
   getNotes: vi.fn(),
   createNote: vi.fn(),
   deleteNote: vi.fn(),
+  updateNote: vi.fn(),
   searchNotes: vi.fn(),
 }));
 
-import { getNotes, createNote, deleteNote, searchNotes } from '../api';
+import { getNotes, createNote, deleteNote, updateNote, searchNotes } from '../api';
 
 describe('NotesList', () => {
   beforeEach(() => {
@@ -141,6 +142,136 @@ describe('NotesList', () => {
       expect(screen.getByText('Page 1 of 3')).toBeDefined();
       expect(screen.getByText('Previous')).toBeDefined();
       expect(screen.getByText('Next')).toBeDefined();
+    });
+  });
+
+  it('optimistically deletes note immediately', async () => {
+    const mockResponse = {
+      items: [
+        { id: 1, title: 'Test', content: 'Content' },
+        { id: 2, title: 'Another', content: 'More' },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+    deleteNote.mockResolvedValue(undefined);
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test: Content')).toBeDefined();
+      expect(screen.getByText('Another: More')).toBeDefined();
+    });
+
+    const deleteButton = screen.getAllByText('Delete')[0];
+    fireEvent.click(deleteButton);
+
+    // Note should be removed immediately (optimistic)
+    await waitFor(() => {
+      expect(screen.queryByText('Test: Content')).toBeNull();
+      expect(screen.getByText('Another: More')).toBeDefined();
+    });
+
+    expect(deleteNote).toHaveBeenCalledWith(1);
+  });
+
+  it('rolls back optimistic delete on error', async () => {
+    const mockResponse = {
+      items: [{ id: 1, title: 'Test', content: 'Content' }],
+      total: 1,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+    deleteNote.mockRejectedValue(new Error('Delete failed'));
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test: Content')).toBeDefined();
+    });
+
+    const deleteButton = screen.getByText('Delete');
+    fireEvent.click(deleteButton);
+
+    // Note should still be visible after error (rollback)
+    await waitFor(() => {
+      expect(screen.getByText(/Error:/)).toBeDefined();
+      expect(screen.getByText('Test: Content')).toBeDefined();
+    });
+  });
+
+  it('optimistically updates note immediately', async () => {
+    const mockResponse = {
+      items: [{ id: 1, title: 'Test', content: 'Content' }],
+      total: 1,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+    updateNote.mockResolvedValue({ id: 1, title: 'Updated', content: 'New content' });
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Test: Content')).toBeDefined();
+    });
+
+    const editButton = screen.getByText('Edit');
+    fireEvent.click(editButton);
+
+    // Should show edit inputs
+    const titleInput = screen.getByDisplayValue('Test');
+    const contentInput = screen.getByDisplayValue('Content');
+
+    fireEvent.change(titleInput, { target: { value: 'Updated' } });
+    fireEvent.change(contentInput, { target: { value: 'New content' } });
+
+    const saveButton = screen.getByText('Save');
+    fireEvent.click(saveButton);
+
+    // Note should be updated immediately (optimistic)
+    await waitFor(() => {
+      expect(screen.getByText('Updated: New content')).toBeDefined();
+    });
+
+    expect(updateNote).toHaveBeenCalledWith(1, { title: 'Updated', content: 'New content' });
+  });
+
+  it('rolls back optimistic update on error', async () => {
+    const mockResponse = {
+      items: [{ id: 1, title: 'Original', content: 'Original content' }],
+      total: 1,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+    updateNote.mockRejectedValue(new Error('Update failed'));
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Original: Original content')).toBeDefined();
+    });
+
+    const editButton = screen.getByText('Edit');
+    fireEvent.click(editButton);
+
+    const titleInput = screen.getByDisplayValue('Original');
+    const contentInput = screen.getByDisplayValue('Original content');
+
+    fireEvent.change(titleInput, { target: { value: 'Updated' } });
+    fireEvent.change(contentInput, { target: { value: 'New content' } });
+
+    const saveButton = screen.getByText('Save');
+    fireEvent.click(saveButton);
+
+    // Note should show original content after error (rollback)
+    await waitFor(() => {
+      expect(screen.getByText(/Error:/)).toBeDefined();
+      expect(screen.getByText('Original: Original content')).toBeDefined();
     });
   });
 });

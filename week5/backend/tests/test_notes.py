@@ -232,3 +232,84 @@ def test_search_page_size_capped_at_100(client):
     assert r.status_code == 200
     data = r.json()
     assert data["page_size"] == 100
+
+
+def test_update_note_success(client):
+    """Test updating a note returns 200 with updated note."""
+    # Create a note first
+    r = client.post("/notes/", json={"title": "Original", "content": "Original content"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    # Update the note
+    r = client.put(f"/notes/{note_id}", json={"title": "Updated", "content": "Updated content"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["title"] == "Updated"
+    assert data["content"] == "Updated content"
+    assert data["id"] == note_id
+
+
+def test_update_note_validation_error_title_too_short(client):
+    """Test update fails with 422 when title is empty."""
+    # Create a note first
+    r = client.post("/notes/", json={"title": "Original", "content": "Original content"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    # Try to update with empty title
+    r = client.put(f"/notes/{note_id}", json={"title": "", "content": "Content"})
+    assert r.status_code == 422
+
+
+def test_update_note_validation_error_title_too_long(client):
+    """Test update fails with 422 when title exceeds 200 characters."""
+    # Create a note first
+    r = client.post("/notes/", json={"title": "Original", "content": "Original content"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    # Try to update with title > 200 chars
+    long_title = "x" * 201
+    r = client.put(f"/notes/{note_id}", json={"title": long_title, "content": "Content"})
+    assert r.status_code == 422
+
+
+def test_update_note_validation_error_content_empty(client):
+    """Test update fails with 422 when content is empty."""
+    # Create a note first
+    r = client.post("/notes/", json={"title": "Original", "content": "Original content"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    # Try to update with empty content
+    r = client.put(f"/notes/{note_id}", json={"title": "Title", "content": ""})
+    assert r.status_code == 422
+
+
+def test_update_note_not_found(client):
+    """Test update returns 404 for non-existent note."""
+    r = client.put("/notes/99999", json={"title": "Updated", "content": "Content"})
+    assert r.status_code == 404
+
+
+def test_delete_note_success(client):
+    """Test deleting a note returns 204."""
+    # Create a note first
+    r = client.post("/notes/", json={"title": "To Delete", "content": "Content"})
+    assert r.status_code == 201
+    note_id = r.json()["id"]
+
+    # Delete the note
+    r = client.delete(f"/notes/{note_id}")
+    assert r.status_code == 204
+
+    # Verify note is deleted
+    r = client.get(f"/notes/{note_id}")
+    assert r.status_code == 404
+
+
+def test_delete_note_not_found(client):
+    """Test delete returns 404 for non-existent note."""
+    r = client.delete("/notes/99999")
+    assert r.status_code == 404
