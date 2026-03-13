@@ -19,7 +19,7 @@
 - Update React UI with a search input, result count, and next/prev pagination controls.
 - Add tests in `backend/tests/test_notes.py` for query edge cases and pagination.
 
-## 3) Full Notes CRUD with optimistic UI updates (medium)
+## 3) Full Notes CRUD with optimistic UI updates (medium)[done]
 - Add `PUT /notes/{id}` and `DELETE /notes/{id}`.
 - In the frontend, update state optimistically while handling error rollbacks.
 - Validate payloads in `schemas.py` (min lengths, max lengths where reasonable).
