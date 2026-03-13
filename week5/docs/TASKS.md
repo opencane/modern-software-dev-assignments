@@ -11,7 +11,7 @@
 - Update `Makefile` with targets: `web-install`, `web-dev`, `web-build`, and ensure `make run` builds the web bundle automatically (or documents the workflow).
 - Add component/unit tests (React Testing Library) for at least two components and integration tests in `backend/tests` for API compatibility.
 
-## 2) Notes search with pagination and sorting (medium)
+## 2) Notes search with pagination and sorting (medium)[done]
 - Implement `GET /notes/search?q=...&page=1&page_size=10&sort=created_desc|title_asc`.
 - Use case‑insensitive matching on title/content.
 - Return a payload with `items`, `total`, `page`, `page_size`.
@@ -25,7 +25,7 @@
 - Validate payloads in `schemas.py` (min lengths, max lengths where reasonable).
 - Add tests for success and validation errors.
 
-## 4) Action items: filters and bulk complete (medium)
+## 4) Action items: filters and bulk complete (medium)[done]
 - Add `GET /action-items?completed=true|false` to filter by completion.
 - Add `POST /action-items/bulk-complete` that accepts a list of IDs and marks them completed in a transaction.
 - Update the frontend with filter toggles and a bulk action UI.
