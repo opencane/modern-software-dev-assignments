@@ -2,12 +2,12 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import Note
-from ..schemas import NoteCreate, NoteRead
+from ..schemas import NoteCreate, NoteRead, NoteSearchResponse
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -38,17 +38,56 @@ def search_notes_redirect():
     return RedirectResponse(url="/notes/search/")
 
 
-@router.get("/search/", response_model=list[NoteRead])
-def search_notes(q: Optional[str] = None, db: Session = Depends(get_db)) -> list[NoteRead]:
-    if not q:
-        rows = db.execute(select(Note)).scalars().all()
-    else:
-        rows = (
-            db.execute(select(Note).where((Note.title.contains(q)) | (Note.content.contains(q))))
-            .scalars()
-            .all()
-        )
-    return [NoteRead.model_validate(row) for row in rows]
+@router.get("/search/", response_model=NoteSearchResponse)
+def search_notes(
+    q: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 10,
+    sort: str = "created_desc",
+    db: Session = Depends(get_db)
+) -> NoteSearchResponse:
+    # Cap page_size at 100
+    page_size = min(page_size, 100)
+
+    # Ensure page is at least 1
+    page = max(page, 1)
+
+    # Build base query
+    query = select(Note)
+    count_query = select(func.count()).select_from(Note)
+
+    # Add case-insensitive search filter if query provided
+    if q:
+        search_filter = (func.lower(Note.title).contains(q.lower())) | (func.lower(Note.content).contains(q.lower()))
+        query = query.where(search_filter)
+        count_query = count_query.where(search_filter)
+
+    # Get total count
+    total = db.execute(count_query).scalar() or 0
+
+    # Apply sorting
+    sort_options = {
+        "created_asc": Note.id.asc(),
+        "created_desc": Note.id.desc(),
+        "title_asc": Note.title.asc(),
+        "title_desc": Note.title.desc(),
+    }
+    order_by = sort_options.get(sort, Note.id.desc())
+    query = query.order_by(order_by)
+
+    # Apply pagination
+    offset = (page - 1) * page_size
+    query = query.offset(offset).limit(page_size)
+
+    # Execute query
+    rows = db.execute(query).scalars().all()
+
+    return NoteSearchResponse(
+        items=[NoteRead.model_validate(row) for row in rows],
+        total=total,
+        page=page,
+        page_size=page_size
+    )
 
 
 @router.get("/{note_id}", response_model=NoteRead)

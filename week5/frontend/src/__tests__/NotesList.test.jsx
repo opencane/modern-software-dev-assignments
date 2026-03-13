@@ -7,9 +7,10 @@ vi.mock('../api', () => ({
   getNotes: vi.fn(),
   createNote: vi.fn(),
   deleteNote: vi.fn(),
+  searchNotes: vi.fn(),
 }));
 
-import { getNotes, createNote, deleteNote } from '../api';
+import { getNotes, createNote, deleteNote, searchNotes } from '../api';
 
 describe('NotesList', () => {
   beforeEach(() => {
@@ -17,17 +18,22 @@ describe('NotesList', () => {
   });
 
   it('renders loading state initially', () => {
-    getNotes.mockImplementation(() => new Promise(() => {})); // Never resolves
+    searchNotes.mockImplementation(() => new Promise(() => {})); // Never resolves
     render(<NotesList />);
     expect(screen.getByText('Loading notes...')).toBeDefined();
   });
 
   it('renders notes after loading', async () => {
-    const mockNotes = [
-      { id: 1, title: 'Test Note', content: 'Test content' },
-      { id: 2, title: 'Another Note', content: 'Another content' },
-    ];
-    getNotes.mockResolvedValue(mockNotes);
+    const mockResponse = {
+      items: [
+        { id: 1, title: 'Test Note', content: 'Test content' },
+        { id: 2, title: 'Another Note', content: 'Another content' },
+      ],
+      total: 2,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
 
     render(<NotesList />);
 
@@ -38,17 +44,17 @@ describe('NotesList', () => {
   });
 
   it('renders empty state when no notes', async () => {
-    getNotes.mockResolvedValue([]);
+    searchNotes.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 10 });
 
     render(<NotesList />);
 
     await waitFor(() => {
-      expect(screen.getByText('No notes yet.')).toBeDefined();
+      expect(screen.getByText('No notes found.')).toBeDefined();
     });
   });
 
   it('renders error message on failure', async () => {
-    getNotes.mockRejectedValue(new Error('Failed to fetch'));
+    searchNotes.mockRejectedValue(new Error('Failed to fetch'));
 
     render(<NotesList />);
 
@@ -58,7 +64,7 @@ describe('NotesList', () => {
   });
 
   it('can create a new note', async () => {
-    getNotes.mockResolvedValue([]);
+    searchNotes.mockResolvedValue({ items: [], total: 0, page: 1, page_size: 10 });
     createNote.mockResolvedValue({ id: 1, title: 'New', content: 'Note' });
 
     render(<NotesList />);
@@ -81,8 +87,13 @@ describe('NotesList', () => {
   });
 
   it('can delete a note', async () => {
-    const mockNotes = [{ id: 1, title: 'Test', content: 'Content' }];
-    getNotes.mockResolvedValue(mockNotes);
+    const mockResponse = {
+      items: [{ id: 1, title: 'Test', content: 'Content' }],
+      total: 1,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
     deleteNote.mockResolvedValue(undefined);
 
     render(<NotesList />);
@@ -96,6 +107,40 @@ describe('NotesList', () => {
 
     await waitFor(() => {
       expect(deleteNote).toHaveBeenCalledWith(1);
+    });
+  });
+
+  it('shows result count correctly', async () => {
+    const mockResponse = {
+      items: [{ id: 1, title: 'Test', content: 'Content' }],
+      total: 15,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Showing 1 of 15 notes')).toBeDefined();
+    });
+  });
+
+  it('shows pagination controls when there are multiple pages', async () => {
+    const mockResponse = {
+      items: [{ id: 1, title: 'Test', content: 'Content' }],
+      total: 25,
+      page: 1,
+      page_size: 10,
+    };
+    searchNotes.mockResolvedValue(mockResponse);
+
+    render(<NotesList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Page 1 of 3')).toBeDefined();
+      expect(screen.getByText('Previous')).toBeDefined();
+      expect(screen.getByText('Next')).toBeDefined();
     });
   });
 });

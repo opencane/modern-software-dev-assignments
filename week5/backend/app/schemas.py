@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class NoteCreate(BaseModel):
@@ -13,6 +14,13 @@ class NoteRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class NoteSearchResponse(BaseModel):
+    items: list[NoteRead]
+    total: int
+    page: int
+    page_size: int
 
 
 class ActionItemCreate(BaseModel):

@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react';
-import { getNotes, createNote, deleteNote } from '../api';
+import { getNotes, createNote, deleteNote, searchNotes } from '../api';
 
 function NotesList() {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Form state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+
+  // Search and pagination state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('created_desc');
+  const [totalNotes, setTotalNotes] = useState(0);
 
   const fetchNotes = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getNotes();
-      setNotes(data);
+      const data = await searchNotes(searchQuery, currentPage, pageSize, sortBy);
+      setNotes(data.items);
+      setTotalNotes(data.total);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -23,7 +33,12 @@ function NotesList() {
 
   useEffect(() => {
     fetchNotes();
-  }, []);
+  }, [currentPage, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Also re-fetch when searchQuery changes (debounced via submit)
+  useEffect(() => {
+    // This is handled by handleSearchSubmit
+  }, [searchQuery]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,6 +62,31 @@ function NotesList() {
       fetchNotes();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page on new search
+    fetchNotes();
+  };
+
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    setCurrentPage(1); // Reset to first page on sort change
+  };
+
+  const totalPages = Math.ceil(totalNotes / pageSize);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -76,8 +116,31 @@ function NotesList() {
         <button type="submit">Add</button>
       </form>
 
+      {/* Search and Sort Controls */}
+      <div style={{ margin: '1rem 0' }}>
+        <form onSubmit={handleSearchSubmit} style={{ display: 'inline' }}>
+          <input
+            type="text"
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button type="submit">Search</button>
+        </form>
+
+        <select value={sortBy} onChange={handleSortChange} style={{ marginLeft: '0.5rem' }}>
+          <option value="created_desc">Newest</option>
+          <option value="created_asc">Oldest</option>
+          <option value="title_asc">Title A-Z</option>
+          <option value="title_desc">Title Z-A</option>
+        </select>
+      </div>
+
+      {/* Result count */}
+      <p>Showing {notes.length} of {totalNotes} notes</p>
+
       {notes.length === 0 ? (
-        <p>No notes yet.</p>
+        <p>No notes found.</p>
       ) : (
         <ul>
           {notes.map((note) => (
@@ -92,6 +155,21 @@ function NotesList() {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ marginTop: '1rem' }}>
+          <button onClick={handlePrevPage} disabled={currentPage === 1}>
+            Previous
+          </button>
+          <span style={{ margin: '0 0.5rem' }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+            Next
+          </button>
+        </div>
       )}
     </div>
   );

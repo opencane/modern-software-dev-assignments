@@ -24,8 +24,13 @@ export async function getNote(id) {
   return fetchJSON(`/notes/${id}`);
 }
 
-export async function searchNotes(query) {
-  return fetchJSON(`/notes/search/?q=${encodeURIComponent(query)}`);
+export async function searchNotes(query = '', page = 1, pageSize = 10, sort = 'created_desc') {
+  const params = new URLSearchParams();
+  if (query) params.append('q', query);
+  params.append('page', page);
+  params.append('page_size', pageSize);
+  params.append('sort', sort);
+  return fetchJSON(`/notes/search/?${params.toString()}`);
 }
 
 export async function createNote(note) {
