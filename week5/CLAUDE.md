@@ -20,3 +20,8 @@ Full-stack FastAPI + React application with SQLite database.
 | `make web-test` | Run frontend Vitest tests |
 | `make seed` | Seed database with sample data |
 
+## run test on specific test
+```bash
+# make sure change directory to week5
+PYTHONPATH=. poetry run pytest -q <path-of-test-file>
+```

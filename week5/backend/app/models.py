@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, Text, ForeignKey, Table
+from sqlalchemy import Boolean, Column, Integer, String, Text, ForeignKey, Table, Index
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -10,6 +10,8 @@ note_tags = Table(
     Base.metadata,
     Column("note_id", Integer, ForeignKey("notes.id"), primary_key=True),
     Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True),
+    Index('ix_note_tags_note_id', 'note_id'),
+    Index('ix_note_tags_tag_id', 'tag_id'),
 )
 
 
@@ -19,6 +21,10 @@ class Note(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
+
+    __table_args__ = (
+        Index('ix_notes_title', 'title'),
+    )
 
     tags = relationship("Tag", secondary=note_tags, back_populates="notes")
     action_items = relationship("ActionItem", back_populates="note", cascade="all, delete-orphan")
@@ -38,7 +44,7 @@ class ActionItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     description = Column(Text, nullable=False)
-    completed = Column(Boolean, default=False, nullable=False)
-    note_id = Column(Integer, ForeignKey("notes.id"), nullable=True)
+    completed = Column(Boolean, default=False, nullable=False, index=True)
+    note_id = Column(Integer, ForeignKey("notes.id"), nullable=True, index=True)
 
     note = relationship("Note", back_populates="action_items")
