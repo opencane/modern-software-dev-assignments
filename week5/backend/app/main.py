@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -12,7 +13,17 @@ from .routers import action_items as action_items_router
 from .routers import notes as notes_router
 from .routers import tags as tags_router
 
-app = FastAPI(title="Modern Software Dev Starter (Week 5)")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    Base.metadata.create_all(bind=engine)
+    apply_seed_if_needed()
+    yield
+    # Shutdown (add cleanup code here if needed)
+
+
+app = FastAPI(title="Modern Software Dev Starter (Week 5)", lifespan=lifespan)
 
 
 # Global exception handlers
@@ -76,12 +87,6 @@ Path("data").mkdir(parents=True, exist_ok=True)
 
 # Mount static frontend (built by Vite) at root to serve assets
 app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
-
-
-@app.on_event("startup")
-def startup_event() -> None:
-    Base.metadata.create_all(bind=engine)
-    apply_seed_if_needed()
 
 
 @app.get("/")

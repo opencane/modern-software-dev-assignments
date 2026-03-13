@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Generic, Optional, TypeVar
 
 
@@ -16,12 +16,11 @@ class NoteUpdate(BaseModel):
 
 
 class NoteRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     content: str
-
-    class Config:
-        from_attributes = True
 
 
 class NoteSearchResponse(BaseModel):
@@ -36,12 +35,11 @@ class ActionItemCreate(BaseModel):
 
 
 class ActionItemRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     description: str
     completed: bool
-
-    class Config:
-        from_attributes = True
 
 
 # Tag schemas
@@ -50,21 +48,19 @@ class TagCreate(BaseModel):
 
 
 class TagRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     name: str
 
-    class Config:
-        from_attributes = True
-
 
 class NoteReadWithTags(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     title: str
     content: str
     tags: list[TagRead] = []
-
-    class Config:
-        from_attributes = True
 
 
 class NoteSearchResponseWithTags(BaseModel):

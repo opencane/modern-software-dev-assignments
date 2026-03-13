@@ -1,4 +1,7 @@
-.PHONY: run test format lint seed web-install web-dev web-build web-test
+.PHONY: run test format lint seed web-install web-dev web-build web-test coverage
+
+coverage: web-build
+	PYTHONPATH=. poetry run pytest --cov=backend --cov-report=term-missing --cov-report=html backend/tests
 
 web-install:
 	cd frontend && npm install
