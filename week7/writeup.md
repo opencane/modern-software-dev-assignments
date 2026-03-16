@@ -18,13 +18,32 @@ This assignment took me about **TODO** hours to do.
 
 ## Task 1: Add more endpoints and validations
 a. Links to relevant commits/issues
-> TODO
+> [commits](https://github.com/zbinxp/modern-software-dev-assignments/pull/1/changes/cb0dc66d365538c0dfd9f74b17d1dc177e44b814)
 
 b. PR Description
-> TODO
+> 
+```
+## Description of the problem and your approach.
+problem: notes don't support full CRUD operation
+aproach:
+- Add delete endpoint for note
+- Add input validation for all endpoint
+- AddXSS protection and error handling
+
+## Summary of testing performed (include commands and results) and any added/updated tests.
+`make test`
+9 passed, 15 warnings in 0.29s
+
+Added tests:
+Unit tests for delete, validation (422), and 404 cases
+
+## Notable tradeoffs, limitations, or follow-ups.
+deleting a note maybe need permission to do it
+```
 
 c. Graphite Diamond generated code review
-> TODO
+> Graphite found no issues
+
 
 ## Task 2: Extend extraction logic
 a. Links to relevant commits/issues

@@ -47,4 +47,6 @@ examine SQL Injection with SQLAlchemy issue at @backend/app/routers/notes.py:72,
 # task1: Add additional API endpoints and implement proper input validation and error handling.
 analysis code first, then design a plan for this task: add CRUD support to the notes, cover both frontend and backend, add unit tests for this feature, ensure proper input validation and error handling. Save the plan to `docs/task1_plan.md`
 
+# task2: Enhance the action item extraction functionality with more sophisticated pattern recognition and analysis.
+analysis code about action item extraction first, then design a plan for this task: enhance the action item extraction functionality with more sophisticated pattern recognition, add unit tests for this feature, ensure proper error handling. Save the plan to `docs/task2_plan.md`
 ```
